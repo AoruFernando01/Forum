@@ -1,5 +1,7 @@
 package br.com.jf.forum.config.security;
 
+import br.com.jf.forum.modelo.Usuario;
+import br.com.jf.forum.repository.UsuarioRepository;
 import net.bytebuddy.asm.Advice;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,8 +18,11 @@ public class AutenticacaoViaTokenFilter extends OncePerRequestFilter {
 
     private TokenService tokenService;
 
-    public AutenticacaoViaTokenFilter(TokenService tokenService) {
+    private UsuarioRepository repository;
+
+    public AutenticacaoViaTokenFilter(TokenService tokenService, UsuarioRepository repository) {
         this.tokenService = tokenService;
+        this.repository = repository;
     }
 
     @Override
@@ -35,8 +40,8 @@ public class AutenticacaoViaTokenFilter extends OncePerRequestFilter {
 
     private void autenticarCliente(String token){
         Long idUsuario = tokenService.getIdUsuario(token);
-
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getPerfis());
+        Usuario usuario = repository.findById(idUsuario).get();
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities() );
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
